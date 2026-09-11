@@ -1,0 +1,15 @@
+{
+  "name": "bobcall-relay",
+  "version": "1.0.0",
+  "description": "Local relay server for BobCall — bridges Bob IDE hooks to the PWA over SSE",
+  "type": "module",
+  "main": "server.mjs",
+  "scripts": {
+    "start": "node server.mjs",
+    "dev": "node --watch server.mjs"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "cors": "^2.8.5"
+  }
+}

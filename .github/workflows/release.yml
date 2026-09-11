@@ -1,0 +1,124 @@
+name: Build & Release APK
+
+# Triggers:
+#   - Push a tag like v1.0.0 → builds APK and creates a GitHub Release
+#   - Manual dispatch → build without publishing a release (for testing)
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version string (e.g. 1.2.3) — used for APK filename only'
+        required: false
+        default: 'dev'
+
+jobs:
+  build-apk:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── 1. Checkout ──────────────────────────────────────────────────────────
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ── 2. Java (required by Gradle) ─────────────────────────────────────────
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      # ── 3. Node.js ───────────────────────────────────────────────────────────
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: pwa/package-lock.json
+
+      # ── 4. Install PWA deps ──────────────────────────────────────────────────
+      - name: Install PWA dependencies
+        run: npm ci
+        working-directory: pwa
+
+      # ── 5. Build Vite PWA ────────────────────────────────────────────────────
+      - name: Build PWA (vite build)
+        run: npm run build
+        working-directory: pwa
+
+      # ── 6. Capacitor sync → writes web assets into android/ ─────────────────
+      - name: Capacitor sync
+        run: npx cap sync android
+        working-directory: pwa
+
+      # ── 7. Cache Gradle ─────────────────────────────────────────────────────
+      - name: Cache Gradle
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ hashFiles('pwa/android/**/*.gradle*', 'pwa/android/gradle/wrapper/gradle-wrapper.properties') }}
+          restore-keys: gradle-
+
+      # ── 8. Make gradlew executable ───────────────────────────────────────────
+      - name: Make gradlew executable
+        run: chmod +x gradlew
+        working-directory: pwa/android
+
+      # ── 9. Build debug APK ───────────────────────────────────────────────────
+      - name: Build debug APK
+        run: ./gradlew assembleDebug --no-daemon
+        working-directory: pwa/android
+
+      # ── 10. Determine version string ─────────────────────────────────────────
+      - name: Set version string
+        id: version
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=dev-${{ github.inputs.version || 'manual' }}" >> $GITHUB_OUTPUT
+          fi
+
+      # ── 11. Rename APK ───────────────────────────────────────────────────────
+      - name: Rename APK
+        run: |
+          mv pwa/android/app/build/outputs/apk/debug/app-debug.apk \
+             BobCall-${{ steps.version.outputs.tag }}.apk
+
+      # ── 12. Upload APK as workflow artifact (always) ─────────────────────────
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: BobCall-${{ steps.version.outputs.tag }}.apk
+          path: BobCall-${{ steps.version.outputs.tag }}.apk
+          retention-days: 30
+
+      # ── 13. Create GitHub Release (tag pushes only) ──────────────────────────
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: BobCall ${{ steps.version.outputs.tag }}
+          body: |
+            ## BobCall ${{ steps.version.outputs.tag }}
+
+            ### Installation
+            1. Download `BobCall-${{ steps.version.outputs.tag }}.apk` below.
+            2. On your Android phone: **Settings → Security → Install unknown apps** → allow your browser.
+            3. Open the downloaded APK and tap **Install**.
+            4. Launch BobCall, enter your relay URL and token, and you're live.
+
+            ### What's in this build
+            - PWA wrapped with Capacitor for native Android install
+            - SSE-based real-time approval notifications from Bob IDE
+            - Approve Once / Approve for Task / Reject actions
+          files: BobCall-${{ steps.version.outputs.tag }}.apk
+          draft: false
+          prerelease: ${{ contains(steps.version.outputs.tag, '-') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,8 @@
+{
+  "appId": "com.saqlainap.bobcall",
+  "appName": "BobCall",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  }
+}

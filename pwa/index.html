@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#6366f1" />
+  <link rel="manifest" href="/manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="/icon-192.png" />
+  <title>BobCall</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z"/>
+        <path d="M12 8v4l3 3"/>
+      </svg>
+      <span>BobCall</span>
+    </div>
+    <div class="status-pill" id="status-pill">Connecting…</div>
+  </header>
+
+  <main>
+    <div id="setup-screen" class="screen hidden">
+      <h2>Configure Relay</h2>
+      <p class="hint">Enter the IP/hostname of the machine running Bob IDE and your secret token.</p>
+      <label>
+        Relay URL
+        <input type="url" id="cfg-url" placeholder="http://192.168.1.x:3456" />
+      </label>
+      <label>
+        Token
+        <input type="text" id="cfg-token" placeholder="bobcall-dev" />
+      </label>
+      <button class="btn btn-primary" id="cfg-save">Save &amp; Connect</button>
+    </div>
+
+    <div id="empty-state" class="screen hidden">
+      <div class="empty-icon">🤙</div>
+      <p>No pending requests.<br/>Bob is either idle or all tools are auto-approved.</p>
+    </div>
+
+    <ul id="notification-list" class="notif-list"></ul>
+  </main>
+
+  <footer>
+    <button class="btn btn-ghost" id="open-settings">⚙ Settings</button>
+    <span id="footer-count"></span>
+  </footer>
+
+  <script type="module" src="/main.js"></script>
+</body>
+</html>

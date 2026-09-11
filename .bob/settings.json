@@ -1,0 +1,27 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .bob/hooks/notify.mjs",
+            "timeout": 135
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"import('.bob/hooks/session-stop.mjs')\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

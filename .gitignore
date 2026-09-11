@@ -1,0 +1,37 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+pwa/dist/
+pwa/.vite/
+android/app/build/
+android/build/
+*.apk
+*.aab
+
+# Capacitor
+android/.gradle/
+android/local.properties
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+*.swp
+
+# Test artifacts
+relay/.test-out.txt
+relay/.test-err.txt
+
+# Bob IDE generated
+.bob/cache/
+.bob/tmp/
